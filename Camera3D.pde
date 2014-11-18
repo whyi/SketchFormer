@@ -7,7 +7,7 @@ public class Camera3D {
   private PVector upVector = new PVector(0,1,0);
   private PVector viewDir = new PVector(0,0,-1);
   private PVector position;
-  private Point3D viewPoint; // viewAt
+  private PVector viewPoint; // viewAt
   private float strafeFactor;
   public float rotatedX = 0;
   public float rotatedY = 0;
@@ -22,7 +22,7 @@ public class Camera3D {
     this.strafeFactor = strafeFactor;
   }  
 
-  public float disTo(final Point3D point) {
+  public float disTo(final PVector point) {
     return (float)sqrt(
       (point.x-x)*(point.x-x)+
       (point.y-y)*(point.y-y)+
@@ -95,7 +95,7 @@ public class Camera3D {
     yDragged = 0;
   }
   
-  public void viewAt(Point3D point) {
+  public void setPositionTo(PVector point) {
     viewPoint = point;
     position.z = -400;
   }

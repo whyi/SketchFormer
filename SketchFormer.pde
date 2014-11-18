@@ -1,7 +1,7 @@
 float xDragged = 0;
 float yDragged = 0;
 bool dragged = false;
-Point3D dragCoordinate;
+PVector dragCoordinate;
 Camera3D myCamera = new Camera3D(0,0,0,100);
 Mesh3D mesh = new Mesh3D();
 
@@ -9,7 +9,7 @@ void setup() {
   size(1500, 600, P3D); 
   noFill();
   mesh.loadMesh();
-  myCamera.viewAt(mesh.geometricCenter);
+  myCamera.setPositionTo(mesh.geometricCenter);
 }
 
 void draw() {
