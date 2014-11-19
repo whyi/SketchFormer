@@ -22,13 +22,10 @@ public class Camera3D {
     this.strafeFactor = strafeFactor;
   }  
 
-  public float disTo(final Point3D point) {
-    return (float)sqrt(
-      (point.x-x)*(point.x-x)+
-      (point.y-y)*(point.y-y)+
-      (point.z-z)*(point.z-z));
+  public void setPositionTo(PVector position) {
+    this.position = position;
   }
-  
+
   public void render() {
     beginCamera();
       myCamera.rotateAroundOrigin(xDragged, yDragged);

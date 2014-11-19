@@ -1,28 +1,28 @@
 float xDragged = 0;
 float yDragged = 0;
-bool dragged = false;
-Point3D dragCoordinate;
-Camera3D myCamera = new Camera3D(0,0,0,100);
+Boolean dragged = false;
+PVector dragCoordinate;
+Camera3D myCamera = new Camera3D(0,0,-400,100);
 Mesh3D mesh = new Mesh3D();
 
 void setup() {
-  size(1500, 600, P3D); 
+  size(1500, 600, OPENGL); 
   noFill();
   mesh.loadMesh();
-  myCamera.viewAt(mesh.geometricCenter);
+  //myCamera.setPositionTo(mesh.geometricCenter);
 }
 
 void draw() {
   background(0);
   renderCamera();
-  renderGeo();
+  renderMesh();
 }
 
 void renderCamera() {
   myCamera.render();
 }
 
-void renderGeo() {
+void renderMesh() {
   pushMatrix();
     translate(-mesh.geometricCenter.x, -mesh.geometricCenter.y, -mesh.geometricCenter.z);
     mesh.render();
@@ -52,13 +52,10 @@ public class Camera3D {
     this.strafeFactor = strafeFactor;
   }  
 
-  public float disTo(final Point3D point) {
-    return (float)sqrt(
-      (point.x-x)*(point.x-x)+
-      (point.y-y)*(point.y-y)+
-      (point.z-z)*(point.z-z));
+  public void setPositionTo(PVector position) {
+    this.position = position;
   }
-  
+
   public void render() {
     beginCamera();
       myCamera.rotateAroundOrigin(xDragged, yDragged);
@@ -191,22 +188,28 @@ void keyPressed() {
 }
 
 public class Mesh3D {
-  private static final string MESH_API_URL = "http://www.whyi.net/bunny.json";
-  private Point3D[] normals = null;
-  private Point3D[] vertices = null;
-  private int[] corners = null;
+  private static final String MESH_API_URL = "http://www.whyi.net/bunny.json";
+  private PVector[] normals = null;
+  private PVector[] vertices = null;
+  private Integer[] corners = null;
   private ArrayList opposites = new ArrayList();
+  private PVector[] vertexNormals;
+  private ArrayList triangleNormals;
   private boolean loaded = false;
-  private Point3D geometricCenter;
-  private Point3D minimumCoordinates;
-  private Point3D maximumCoordinates;
+  private PVector geometricCenter;
+  private PVector minimumCoordinates;
+  private PVector maximumCoordinates;
+  
+  private int numberOfVertices;
+  private int numberOfCorners;
+  private int numberOfTriangles;
 
   public Mesh3D() {
     
   }
 
   public float diag() {
-    sqrt(width()*width()+height()*height());
+    return sqrt(width()*width()+height()*height());
   }
   
   public float width() {
@@ -218,27 +221,27 @@ public class Mesh3D {
   }
 
   // in the future load via ajax call!  
-  public void loadMesh(String filename) {
+  public void loadMesh() {
     String lines[] = loadStrings("bunny.txt");
 
     int lineCounter = 0;
-    int numberOfVertices = int(lines[lineCounter]);
+    numberOfVertices = int(lines[lineCounter]);
     ++lineCounter;
 
     ArrayList vertexList = new ArrayList();
     for (int i = 0; i < numberOfVertices; ++i) {
       float[] coordinates = float(split(lines[lineCounter], ","));
-      Point3D point = new Point3D(coordinates[0], coordinates[1], coordinates[2]);
+      PVector point = new PVector(coordinates[0], coordinates[1], coordinates[2]);
       vertexList.add(point);
       ++lineCounter;
     }
 
-    int numberOfFaces = int(lines[lineCounter]);
+    numberOfTriangles = int(lines[lineCounter]);
     ++lineCounter;
 
-    ArrayList cornerList = new ArrayList();
+    ArrayList<Integer> cornerList = new ArrayList();
 
-    for (int i = 0; i < numberOfFaces; ++i) {
+    for (int i = 0; i < numberOfTriangles; ++i) {
       int[] faceIndices = int(split(lines[lineCounter], ","));
       ++lineCounter;
       // assert here maybe
@@ -247,39 +250,58 @@ public class Mesh3D {
       cornerList.add(faceIndices[2]);
     }
 
-    corners = cornerList.toArray();
-    vertices = vertexList.toArray();
+    vertices = (PVector[])vertexList.toArray();
+    numberOfVertices = vertices.length;
+
+    corners = (Integer[])cornerList.toArray();
+    numberOfCorners = corners.length;
+ 
     geometricCenter = computeGeometricCenter();
     computeBoundingBox();
+    computeNormals();
     loaded = true;
   }
-  
+
+ 
   public void render() {
     if (loaded == false)
       return;
+
+    directionalLight(126, 126, 126, 0, 0, -1);
+    ambientLight(255, 0, 0);
+
+    lights();
     
-    // origin
-    pushMatrix();
-      translate(0,0,0);
-      box(1);
-    popMatrix();
+    fill(0,255,0);
     
-    fill(0,255,0);    
-    for (int i = 0; i < corners.length/3; ++i) {
-      Point3D a = vertices[corners[i*3]];
-      Point3D b = vertices[corners[i*3+1]];
-      Point3D c = vertices[corners[i*3+2]];
-      beginShape(TRIANGLE);
+    stroke();
+
+    for (int i = 0; i < numberOfTriangles; ++i) {
+      PVector a = vertices[corners[i*3]];
+      PVector normalA = vertexNormals[corners[i*3]]; 
+      PVector b = vertices[corners[i*3+1]];
+      PVector normalB = vertexNormals[corners[i*3+1]];
+      PVector c = vertices[corners[i*3+2]];
+      PVector normalC = vertexNormals[corners[i*3+2]];
+
+      beginShape(TRIANGLES);
+        normal(normalA.x, normalA.y, normalA.z);
         vertex(a.x, a.y, a.z);
+        normal(normalB.x, normalB.y, normalB.z);
         vertex(b.x, b.y, b.z);
+        normal(normalC.x, normalC.y, normalC.z);
         vertex(c.x, c.y, c.z);
-      endShape(TRIANGLE);
-    }    
+      endShape();
+    }
+    pushMatrix();
+      noStroke();
+      sphere(0);
+    popMatrix();
   }
   
-  public Point3D computeGeometricCenter() {
-    Point3D pt = new Point3D(0,0,0);
-    for (Point3D point : vertices) {
+  public PVector computeGeometricCenter() {
+    PVector pt = new PVector(0,0,0);
+    for (PVector point : vertices) {
       pt.x += point.x;
       pt.y += point.y;
       pt.z += point.z;
@@ -293,11 +315,11 @@ public class Mesh3D {
   }
 
   public void computeBoundingBox() {
-    minimumCoordinates = new Point3D(1E+16,1E+16,1E+16);
-    maximumCoordinates = new Point3D(-1E+16,-1E+16,-1E+16);
+    minimumCoordinates = new PVector(1E+16,1E+16,1E+16);
+    maximumCoordinates = new PVector(-1E+16,-1E+16,-1E+16);
 
-    Point3D pt = new Point3D(0,0,0);
-    for (Point3D point : vertices) {
+    PVector pt = new PVector(0,0,0);
+    for (PVector point : vertices) {
       if (point.x < minimumCoordinates.x) {
         minimumCoordinates.x = point.x;
       }
@@ -324,14 +346,55 @@ public class Mesh3D {
     }
   }
   
-  private void computeNormal() {
-    if (normals == null) {
-      
-    }
+  // shortcuts from corner index to geometry
+  private PVector g(int cornerIndex) {
+    return vertices[corners[cornerIndex]];
   }
   
-  private void computeOpposites() {
-    
+  // shortcut to corner
+  private Integer v(Integer cornerIndex) {
+    return corners[cornerIndex];
+  }
+  
+  // shortcut from vertex index to triangle index
+  private int t(int cornerIndex) {
+    return (int)cornerIndex/3;
+  }
+  
+  private void computeNormals() {
+    triangleNormals = new ArrayList();
+
+    // caches normals of all triangles.
+    for (int i = 0; i < numberOfTriangles; ++i) {
+      PVector triangleNormal = triNormal(g(i*3), g(i*3+1), g(i*3+2));
+      triangleNormal.normalize();
+      triangleNormals.add(triangleNormal);
+    }
+
+    // computes the vertex normals as sums of the normal vectors of incident triangles scaled by area/2
+    vertexNormals = new PVector[numberOfVertices];
+  
+    for (int i=0; i<numberOfVertices; ++i) {
+      vertexNormals[i] = new PVector(0,0,0);
+    }
+  
+    for (int i=0; i<numberOfCorners; ++i) {
+      vertexNormals[v(i)].add((PVector)triangleNormals.get((int)t(i)));
+    }
+
+    for (PVector vertexNormal: vertexNormals) {
+      vertexNormal.normalize();
+    }
+  }
+ 
+  private PVector vector(PVector A, PVector B) {
+    return new PVector(B.x-A.x, B.y-A.y, B.z-A.z);
+  }
+ 
+  private PVector triNormal(PVector A, PVector B, PVector C) {
+    PVector AB = vector(A,B);
+    PVector AC = vector(A,C);
+    return AB.cross(AC);
   }
 }
 void mouseScrolled() {
@@ -345,14 +408,14 @@ void mouseScrolled() {
 
 void mousePressed() {
   dragged = false;
-  dragCoordinate = new Point3D(mouseX, mouseY, 0);
+  dragCoordinate = new PVector(mouseX, mouseY, 0);
 }
 
 void mouseDragged() {
   if (mousePressed) {
     yDragged = mouseX - dragCoordinate.x;
     xDragged = mouseY - dragCoordinate.y;
-    dragCoordinate = new Point3D(mouseX, mouseY, 0);
+    dragCoordinate = new PVector(mouseX, mouseY, 0);
     dragged = true;
   }
 }
@@ -361,7 +424,7 @@ void mouseReleased() {
   if (dragged) {
     yDragged = mouseX - dragCoordinate.x;
     xDragged = mouseY - dragCoordinate.y;
-    dragCoordinate = new Point3D(mouseX, mouseY, 0);
+    dragCoordinate = new PVector(mouseX, mouseY, 0);
     dragged = false;
   }
 }

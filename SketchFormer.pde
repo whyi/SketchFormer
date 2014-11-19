@@ -1,28 +1,28 @@
 float xDragged = 0;
 float yDragged = 0;
-bool dragged = false;
-Point3D dragCoordinate;
-Camera3D myCamera = new Camera3D(0,0,0,100);
+Boolean dragged = false;
+PVector dragCoordinate;
+Camera3D myCamera = new Camera3D(0,0,-400,100);
 Mesh3D mesh = new Mesh3D();
 
 void setup() {
-  size(1500, 600, P3D); 
+  size(1500, 600, OPENGL); 
   noFill();
   mesh.loadMesh();
-  myCamera.viewAt(mesh.geometricCenter);
+  //myCamera.setPositionTo(mesh.geometricCenter);
 }
 
 void draw() {
   background(0);
   renderCamera();
-  renderGeo();
+  renderMesh();
 }
 
 void renderCamera() {
   myCamera.render();
 }
 
-void renderGeo() {
+void renderMesh() {
   pushMatrix();
     translate(-mesh.geometricCenter.x, -mesh.geometricCenter.y, -mesh.geometricCenter.z);
     mesh.render();
