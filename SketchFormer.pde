@@ -9,7 +9,6 @@ void setup() {
   size(1500, 600, OPENGL); 
   noFill();
   mesh.loadMesh();
-  //myCamera.setPositionTo(mesh.geometricCenter);
 }
 
 void draw() {
