@@ -1,9 +1,10 @@
+import java.util.Collections;
 public class Mesh3D {
   private static final String MESH_API_URL = "http://www.whyi.net/bunny.json";
   private PVector[] normals = null;
   private PVector[] vertices = null;
   private Integer[] corners = null;
-  private ArrayList opposites = new ArrayList();
+  private Integer[] opposites = null;
   private PVector[] vertexNormals;
   private ArrayList triangleNormals;
   private boolean loaded = false;
@@ -15,8 +16,75 @@ public class Mesh3D {
   private int numberOfCorners;
   private int numberOfTriangles;
 
+  // for the O-Table
+  private final class Triplet {
+    public final int a;
+    public final int b;
+    public final int c;
+    public Triplet(int a, int b, int c) {
+      this.a = a;
+      this.b = b;
+      this.c = c;
+    }
+   
+    public boolean isLessThan(Triplet rhs) {
+      if (a < rhs.a) {
+        return true;
+      }
+      else if (a == rhs.a) {
+        if (b < rhs.b) {
+          return true;
+        }
+        else if (b == rhs.b) {
+          if (c < rhs.c) {
+            return true;
+          }
+        }
+        else {
+          return false;
+        }
+      }
+      return false;
+    }
+  }
+
   public Mesh3D() {
     
+  }
+
+  private static void swap(ArrayList list, int a, int b) {
+    Triplet tmp = (Triplet) list.get(a);
+    list.set(a, list.get(b));
+    list.set(b, tmp);
+  }
+
+  private static int partition(ArrayList list, int left, int right) {
+    int pivotIndex = floor((left + right)/2);
+    final Triplet pivotValue = (Triplet) list.get(pivotIndex);
+    swap(list, pivotIndex, right);
+
+    int storedIndex = left;
+    for (int i=left; i<right; ++i) {
+      Triplet currentValue = (Triplet) list.get(i);
+      if (currentValue.isLessThan(pivotValue)) {
+        swap(list, storedIndex, i);
+        ++storedIndex;
+      }
+    }
+    swap(list, right, storedIndex);
+    return storedIndex;
+  }
+  
+  private static ArrayList naiveQuickSort(ArrayList list, int left, int right) {
+    if (left < right) {
+      final int pivot = partition(list, left, right);
+      naiveQuickSort(list, left, pivot-1);
+      naiveQuickSort(list, pivot+1, right);
+    }
+  }
+
+  private static ArrayList naiveSort(ArrayList list) {
+    naiveQuickSort(list, 0, list.size()-1);
   }
 
   public float diag() {
@@ -66,10 +134,11 @@ public class Mesh3D {
 
     corners = (Integer[])cornerList.toArray();
     numberOfCorners = corners.length;
- 
+
     geometricCenter = computeGeometricCenter();
     computeBoundingBox();
     computeNormals();
+    buildOTable();
     loaded = true;
   }
 
@@ -85,7 +154,7 @@ public class Mesh3D {
     
     fill(0,255,0);
     
-    stroke();
+    stroke(3);
 
     for (int i = 0; i < numberOfTriangles; ++i) {
       PVector a = vertices[corners[i*3]];
@@ -169,7 +238,27 @@ public class Mesh3D {
   
   // shortcut from vertex index to triangle index
   private int t(int cornerIndex) {
-    return (int)cornerIndex/3;
+    return floor(cornerIndex/3);
+  }
+  
+  // shortcut to the next corner
+  private static final int n(int cornerIndex) {
+    if (cornerIndex%3 == 2) {
+      return cornerIndex-2;
+    }
+    return cornerIndex+1;
+  }
+
+  // shortcut to the previous corner
+  private static final int p(int cornerIndex) {
+    if (cornerIndex%3 == 0) {
+      return cornerIndex+2;
+    }
+    return cornerIndex-1;
+  }
+
+  private static final boolean border(int cornerIndex) {
+    return (opposite[i]==-1)? true:false;
   }
   
   private void computeNormals() {
@@ -197,12 +286,45 @@ public class Mesh3D {
       vertexNormal.normalize();
     }
   }
- 
-  private PVector vector(PVector A, PVector B) {
+
+  // O(n^2) to O(nlogn) magic!
+  private void buildOTable() {
+    if (opposites == null) {
+      opposites = new Integer[numberOfCorners];
+    }
+
+    for (int i=0; i<numberOfCorners; ++i) {
+      opposites[i] = -1;
+    }
+  
+    // couldn't use Guava here, so let's keep the old Triplet class.
+    ArrayList triples = new ArrayList();
+    for (int i=0; i<numberOfCorners; ++i) {
+      int nextCorner = v(n(i));
+      int previousCorner = v(p(i));
+      
+      triples.add(new Triplet(min(nextCorner,previousCorner), max(nextCorner,previousCorner), i));
+    }
+
+    naiveSort(triples);
+  
+    // just pair up the stuff
+    for (int i = 0; i < numberOfCorners-1; ++i) {
+      Triplet t1 = (Triplet)triples.get(i);
+      Triplet t2 = (Triplet)triples.get(i+1);
+      if (t1.a == t2.a && t1.b == t2.b) {
+        opposites[t1.c] = t2.c;
+        opposites[t2.c] = t1.c;
+        ++i;
+      }
+    }
+  }
+
+  private static PVector vector(PVector A, PVector B) {
     return new PVector(B.x-A.x, B.y-A.y, B.z-A.z);
   }
  
-  private PVector triNormal(PVector A, PVector B, PVector C) {
+  private static PVector triNormal(PVector A, PVector B, PVector C) {
     PVector AB = vector(A,B);
     PVector AC = vector(A,C);
     return AB.cross(AC);
