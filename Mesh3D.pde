@@ -1,12 +1,11 @@
 import java.util.Collections;
 public class Mesh3D {
   private static final String MESH_API_URL = "http://www.whyi.net/bunny.json";
-  private PVector[] normals = null;
-  private PVector[] vertices = null;
-  private Integer[] corners = null;
-  private Integer[] opposites = null;
-  private PVector[] vertexNormals;
-  private ArrayList triangleNormals;
+  private ArrayList vertices = null;
+  private ArrayList corners = null;
+  private ArrayList opposites = null;
+  private ArrayList vertexNormals = null;
+  private ArrayList triangleNormals = null;
   private boolean loaded = false;
   private PVector geometricCenter;
   private PVector minimumCoordinates;
@@ -107,33 +106,30 @@ public class Mesh3D {
     numberOfVertices = int(lines[lineCounter]);
     ++lineCounter;
 
-    ArrayList vertexList = new ArrayList();
+    vertices = new ArrayList();
     for (int i = 0; i < numberOfVertices; ++i) {
       float[] coordinates = float(split(lines[lineCounter], ","));
       PVector point = new PVector(coordinates[0], coordinates[1], coordinates[2]);
-      vertexList.add(point);
+      vertices.add(point);
       ++lineCounter;
     }
 
     numberOfTriangles = int(lines[lineCounter]);
     ++lineCounter;
 
-    ArrayList<Integer> cornerList = new ArrayList();
+    corners = new ArrayList();
 
     for (int i = 0; i < numberOfTriangles; ++i) {
       int[] faceIndices = int(split(lines[lineCounter], ","));
       ++lineCounter;
-      // assert here maybe
-      cornerList.add(faceIndices[0]);
-      cornerList.add(faceIndices[1]);
-      cornerList.add(faceIndices[2]);
+
+      corners.add(faceIndices[0]);
+      corners.add(faceIndices[1]);
+      corners.add(faceIndices[2]);
     }
 
-    vertices = (PVector[])vertexList.toArray();
-    numberOfVertices = vertices.length;
-
-    corners = (Integer[])cornerList.toArray();
-    numberOfCorners = corners.length;
+    numberOfVertices = vertices.size();
+    numberOfCorners = corners.size();
 
     geometricCenter = computeGeometricCenter();
     computeBoundingBox();
@@ -157,12 +153,12 @@ public class Mesh3D {
     stroke(3);
 
     for (int i = 0; i < numberOfTriangles; ++i) {
-      PVector a = vertices[corners[i*3]];
-      PVector normalA = vertexNormals[corners[i*3]]; 
-      PVector b = vertices[corners[i*3+1]];
-      PVector normalB = vertexNormals[corners[i*3+1]];
-      PVector c = vertices[corners[i*3+2]];
-      PVector normalC = vertexNormals[corners[i*3+2]];
+      PVector a = g(i*3);
+      PVector normalA = vertexNormals.get(v(i*3)); 
+      PVector b = g(i*3+1);
+      PVector normalB = vertexNormals.get(v(i*3+1));
+      PVector c = g(i*3+2);
+      PVector normalC = vertexNormals.get(v(i*3+2));
 
       beginShape(TRIANGLES);
         normal(normalA.x, normalA.y, normalA.z);
@@ -187,7 +183,7 @@ public class Mesh3D {
       pt.z += point.z;
     }
     
-    int numberOfVertices = vertices.length;
+    int numberOfVertices = vertices.size();
     pt.x /= numberOfVertices;
     pt.y /= numberOfVertices;
     pt.z /= numberOfVertices;
@@ -228,12 +224,12 @@ public class Mesh3D {
   
   // shortcuts from corner index to geometry
   private PVector g(int cornerIndex) {
-    return vertices[corners[cornerIndex]];
+    return vertices.get(corners.get(cornerIndex));
   }
   
   // shortcut to corner
   private Integer v(Integer cornerIndex) {
-    return corners[cornerIndex];
+    return corners.get(cornerIndex);
   }
   
   // shortcut from vertex index to triangle index
@@ -272,14 +268,16 @@ public class Mesh3D {
     }
 
     // computes the vertex normals as sums of the normal vectors of incident triangles scaled by area/2
-    vertexNormals = new PVector[numberOfVertices];
+    vertexNormals = new ArrayList();
   
     for (int i=0; i<numberOfVertices; ++i) {
-      vertexNormals[i] = new PVector(0,0,0);
+      vertexNormals.add(new PVector(0,0,0));
     }
   
     for (int i=0; i<numberOfCorners; ++i) {
-      vertexNormals[v(i)].add((PVector)triangleNormals.get((int)t(i)));
+      PVector vertexNormal = (PVector) vertexNormals.get(v(i));
+      vertexNormal.add((PVector)triangleNormals.get((int)t(i)));
+      vertexNormals.set(v(i), vertexNormal);
     }
 
     for (PVector vertexNormal: vertexNormals) {
@@ -289,12 +287,10 @@ public class Mesh3D {
 
   // O(n^2) to O(nlogn) magic!
   private void buildOTable() {
-    if (opposites == null) {
-      opposites = new Integer[numberOfCorners];
-    }
+    opposites = new ArrayList();
 
     for (int i=0; i<numberOfCorners; ++i) {
-      opposites[i] = -1;
+      opposites.add(-1);
     }
   
     // couldn't use Guava here, so let's keep the old Triplet class.
@@ -313,8 +309,8 @@ public class Mesh3D {
       Triplet t1 = (Triplet)triples.get(i);
       Triplet t2 = (Triplet)triples.get(i+1);
       if (t1.a == t2.a && t1.b == t2.b) {
-        opposites[t1.c] = t2.c;
-        opposites[t2.c] = t1.c;
+        opposites.set(t1.c, t2.c);
+        opposites.set(t2.c, t1.c);
         ++i;
       }
     }
