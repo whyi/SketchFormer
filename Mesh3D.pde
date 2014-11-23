@@ -3,7 +3,8 @@ public class Mesh3D {
   private static final String MESH_API_URL = "http://www.whyi.net/bunny.json";
   private PVector[] normals = null;
   private PVector[] vertices = null;
-  private Integer[] corners = null;
+  //private Integer[] corners = null;
+  private ArrayList corners = null;
   private Integer[] opposites = null;
   private PVector[] vertexNormals;
   private ArrayList triangleNormals;
@@ -118,22 +119,20 @@ public class Mesh3D {
     numberOfTriangles = int(lines[lineCounter]);
     ++lineCounter;
 
-    ArrayList<Integer> cornerList = new ArrayList();
+    corners = new ArrayList();
 
     for (int i = 0; i < numberOfTriangles; ++i) {
       int[] faceIndices = int(split(lines[lineCounter], ","));
       ++lineCounter;
-      // assert here maybe
-      cornerList.add(faceIndices[0]);
-      cornerList.add(faceIndices[1]);
-      cornerList.add(faceIndices[2]);
+
+      corners.add(faceIndices[0]);
+      corners.add(faceIndices[1]);
+      corners.add(faceIndices[2]);
     }
 
     vertices = (PVector[])vertexList.toArray();
     numberOfVertices = vertices.length;
-
-    corners = (Integer[])cornerList.toArray();
-    numberOfCorners = corners.length;
+    numberOfCorners = corners.size();
 
     geometricCenter = computeGeometricCenter();
     computeBoundingBox();
@@ -157,12 +156,12 @@ public class Mesh3D {
     stroke(3);
 
     for (int i = 0; i < numberOfTriangles; ++i) {
-      PVector a = vertices[corners[i*3]];
-      PVector normalA = vertexNormals[corners[i*3]]; 
-      PVector b = vertices[corners[i*3+1]];
-      PVector normalB = vertexNormals[corners[i*3+1]];
-      PVector c = vertices[corners[i*3+2]];
-      PVector normalC = vertexNormals[corners[i*3+2]];
+      PVector a = vertices[v(i*3)];
+      PVector normalA = vertexNormals[v(i*3)]; 
+      PVector b = vertices[v(i*3+1)];
+      PVector normalB = vertexNormals[v(i*3+1)];
+      PVector c = vertices[v(i*3+2)];
+      PVector normalC = vertexNormals[v(i*3+2)];
 
       beginShape(TRIANGLES);
         normal(normalA.x, normalA.y, normalA.z);
@@ -228,12 +227,13 @@ public class Mesh3D {
   
   // shortcuts from corner index to geometry
   private PVector g(int cornerIndex) {
-    return vertices[corners[cornerIndex]];
+    return vertices[corners.get(cornerIndex)];
   }
   
   // shortcut to corner
   private Integer v(Integer cornerIndex) {
-    return corners[cornerIndex];
+    //return corners[cornerIndex];
+    return corners.get(cornerIndex);
   }
   
   // shortcut from vertex index to triangle index
