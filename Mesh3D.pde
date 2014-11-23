@@ -3,11 +3,10 @@ public class Mesh3D {
   private static final String MESH_API_URL = "http://www.whyi.net/bunny.json";
   private PVector[] normals = null;
   private PVector[] vertices = null;
-  //private Integer[] corners = null;
   private ArrayList corners = null;
   private Integer[] opposites = null;
-  private PVector[] vertexNormals;
-  private ArrayList triangleNormals;
+  private ArrayList vertexNormals = null;
+  private ArrayList triangleNormals = null;
   private boolean loaded = false;
   private PVector geometricCenter;
   private PVector minimumCoordinates;
@@ -157,11 +156,11 @@ public class Mesh3D {
 
     for (int i = 0; i < numberOfTriangles; ++i) {
       PVector a = vertices[v(i*3)];
-      PVector normalA = vertexNormals[v(i*3)]; 
+      PVector normalA = vertexNormals.get(v(i*3)); 
       PVector b = vertices[v(i*3+1)];
-      PVector normalB = vertexNormals[v(i*3+1)];
+      PVector normalB = vertexNormals.get(v(i*3+1));
       PVector c = vertices[v(i*3+2)];
-      PVector normalC = vertexNormals[v(i*3+2)];
+      PVector normalC = vertexNormals.get(v(i*3+2));
 
       beginShape(TRIANGLES);
         normal(normalA.x, normalA.y, normalA.z);
@@ -232,7 +231,6 @@ public class Mesh3D {
   
   // shortcut to corner
   private Integer v(Integer cornerIndex) {
-    //return corners[cornerIndex];
     return corners.get(cornerIndex);
   }
   
@@ -272,14 +270,16 @@ public class Mesh3D {
     }
 
     // computes the vertex normals as sums of the normal vectors of incident triangles scaled by area/2
-    vertexNormals = new PVector[numberOfVertices];
+    vertexNormals = new ArrayList();
   
     for (int i=0; i<numberOfVertices; ++i) {
-      vertexNormals[i] = new PVector(0,0,0);
+      vertexNormals.add(new PVector(0,0,0));
     }
   
     for (int i=0; i<numberOfCorners; ++i) {
-      vertexNormals[v(i)].add((PVector)triangleNormals.get((int)t(i)));
+      PVector vertexNormal = (PVector) vertexNormals.get(v(i));
+      vertexNormal.add((PVector)triangleNormals.get((int)t(i)));
+      vertexNormals.set(v(i), vertexNormal);
     }
 
     for (PVector vertexNormal: vertexNormals) {
