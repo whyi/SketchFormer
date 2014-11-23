@@ -1,10 +1,9 @@
 import java.util.Collections;
 public class Mesh3D {
   private static final String MESH_API_URL = "http://www.whyi.net/bunny.json";
-  private PVector[] normals = null;
   private PVector[] vertices = null;
   private ArrayList corners = null;
-  private Integer[] opposites = null;
+  private ArrayList opposites = null;
   private ArrayList vertexNormals = null;
   private ArrayList triangleNormals = null;
   private boolean loaded = false;
@@ -289,12 +288,10 @@ public class Mesh3D {
 
   // O(n^2) to O(nlogn) magic!
   private void buildOTable() {
-    if (opposites == null) {
-      opposites = new Integer[numberOfCorners];
-    }
+    opposites = new ArrayList();
 
     for (int i=0; i<numberOfCorners; ++i) {
-      opposites[i] = -1;
+      opposites.add(-1);
     }
   
     // couldn't use Guava here, so let's keep the old Triplet class.
@@ -313,8 +310,8 @@ public class Mesh3D {
       Triplet t1 = (Triplet)triples.get(i);
       Triplet t2 = (Triplet)triples.get(i+1);
       if (t1.a == t2.a && t1.b == t2.b) {
-        opposites[t1.c] = t2.c;
-        opposites[t2.c] = t1.c;
+        opposites.set(t1.c, t2.c);
+        opposites.set(t2.c, t1.c);
         ++i;
       }
     }
