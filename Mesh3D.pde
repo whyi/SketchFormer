@@ -1,7 +1,7 @@
 import java.util.Collections;
 public class Mesh3D {
   private static final String MESH_API_URL = "http://www.whyi.net/bunny.json";
-  private PVector[] vertices = null;
+  private ArrayList vertices = null;
   private ArrayList corners = null;
   private ArrayList opposites = null;
   private ArrayList vertexNormals = null;
@@ -106,11 +106,11 @@ public class Mesh3D {
     numberOfVertices = int(lines[lineCounter]);
     ++lineCounter;
 
-    ArrayList vertexList = new ArrayList();
+    vertices = new ArrayList();
     for (int i = 0; i < numberOfVertices; ++i) {
       float[] coordinates = float(split(lines[lineCounter], ","));
       PVector point = new PVector(coordinates[0], coordinates[1], coordinates[2]);
-      vertexList.add(point);
+      vertices.add(point);
       ++lineCounter;
     }
 
@@ -128,8 +128,7 @@ public class Mesh3D {
       corners.add(faceIndices[2]);
     }
 
-    vertices = (PVector[])vertexList.toArray();
-    numberOfVertices = vertices.length;
+    numberOfVertices = vertices.size();
     numberOfCorners = corners.size();
 
     geometricCenter = computeGeometricCenter();
@@ -154,11 +153,11 @@ public class Mesh3D {
     stroke(3);
 
     for (int i = 0; i < numberOfTriangles; ++i) {
-      PVector a = vertices[v(i*3)];
+      PVector a = g(i*3);
       PVector normalA = vertexNormals.get(v(i*3)); 
-      PVector b = vertices[v(i*3+1)];
+      PVector b = g(i*3+1);
       PVector normalB = vertexNormals.get(v(i*3+1));
-      PVector c = vertices[v(i*3+2)];
+      PVector c = g(i*3+2);
       PVector normalC = vertexNormals.get(v(i*3+2));
 
       beginShape(TRIANGLES);
@@ -184,7 +183,7 @@ public class Mesh3D {
       pt.z += point.z;
     }
     
-    int numberOfVertices = vertices.length;
+    int numberOfVertices = vertices.size();
     pt.x /= numberOfVertices;
     pt.y /= numberOfVertices;
     pt.z /= numberOfVertices;
@@ -225,7 +224,7 @@ public class Mesh3D {
   
   // shortcuts from corner index to geometry
   private PVector g(int cornerIndex) {
-    return vertices[corners.get(cornerIndex)];
+    return vertices.get(corners.get(cornerIndex));
   }
   
   // shortcut to corner
