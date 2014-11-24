@@ -90,5 +90,5 @@ describe "SketchFormer", ->
         pointA = {x:0,y:0,z:0}
         pointB = {x:10,y:0,z:0}
         pointC = {x:10,y:10,z:0}
-        expectedNormal = {x:0,y:0,z:1}
+        expectedNormal = {x:10,y:10,z:10}
         expect(@geometricOpertaions.triNormal(pointA, pointB, pointC)).toEqual(expectedNormal)
