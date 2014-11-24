@@ -1,11 +1,11 @@
 import java.util.Collections;
 public class Mesh3D {
   private static final String MESH_API_URL = "http://www.whyi.net/bunny.json";
-  private ArrayList vertices = null;
-  private ArrayList corners = null;
-  private ArrayList opposites = null;
-  private ArrayList vertexNormals = null;
-  private ArrayList triangleNormals = null;
+  private ArrayList<PVector> vertices = null;
+  private ArrayList<Integer> corners = null;
+  private ArrayList<Integer> opposites = null;
+  private ArrayList<PVector> vertexNormals = null;
+  private ArrayList<PVector> triangleNormals = null;
   private boolean loaded = false;
   private PVector geometricCenter;
   private PVector minimumCoordinates;
@@ -18,77 +18,6 @@ public class Mesh3D {
   
   public Mesh3D(GeometricOperations geometricOperations) {
     this.geometricOperations = geometricOperations;
-  }
-
-  // for the O-Table
-  private final class Triplet {
-    public final int a;
-    public final int b;
-    public final int c;
-    public Triplet(int a, int b, int c) {
-      this.a = a;
-      this.b = b;
-      this.c = c;
-    }
-   
-    public boolean isLessThan(Triplet rhs) {
-      if (a < rhs.a) {
-        return true;
-      }
-      else if (a == rhs.a) {
-        if (b < rhs.b) {
-          return true;
-        }
-        else if (b == rhs.b) {
-          if (c < rhs.c) {
-            return true;
-          }
-        }
-        else {
-          return false;
-        }
-      }
-      return false;
-    }
-  }
-
-  public Mesh3D() {
-    
-  }
-
-  private static void swap(ArrayList list, int a, int b) {
-    Triplet tmp = (Triplet) list.get(a);
-    list.set(a, list.get(b));
-    list.set(b, tmp);
-  }
-
-  private static int partition(ArrayList list, int left, int right) {
-    int pivotIndex = floor((left + right)/2);
-    final Triplet pivotValue = (Triplet) list.get(pivotIndex);
-    swap(list, pivotIndex, right);
-
-    int storedIndex = left;
-    for (int i=left; i<right; ++i) {
-      Triplet currentValue = (Triplet) list.get(i);
-      if (currentValue.isLessThan(pivotValue)) {
-        swap(list, storedIndex, i);
-        ++storedIndex;
-      }
-    }
-    swap(list, right, storedIndex);
-    return storedIndex;
-  }
-  
-  private static ArrayList naiveQuickSort(ArrayList list, int left, int right) {
-    if (left < right) {
-      final int pivot = partition(list, left, right);
-      naiveQuickSort(list, left, pivot-1);
-      naiveQuickSort(list, pivot+1, right);
-    }
-  }
-
-  private static ArrayList naiveSort(ArrayList list) {
-    naiveQuickSort(list, 0, list.size()-1);
   }
 
   public float diag() {
@@ -159,11 +88,11 @@ public class Mesh3D {
 
     for (int i = 0; i < numberOfTriangles; ++i) {
       PVector a = g(i*3);
-      PVector normalA = vertexNormals.get(v(i*3)); 
+      PVector normalA = vertexNormal(i*3); 
       PVector b = g(i*3+1);
-      PVector normalB = vertexNormals.get(v(i*3+1));
+      PVector normalB = vertexNormal(i*3+1);
       PVector c = g(i*3+2);
-      PVector normalC = vertexNormals.get(v(i*3+2));
+      PVector normalC = vertexNormal(i*3+2);
 
       beginShape(TRIANGLES);
         normal(normalA.x, normalA.y, normalA.z);
@@ -182,7 +111,7 @@ public class Mesh3D {
   
   public PVector computeGeometricCenter() {
     PVector pt = new PVector(0,0,0);
-    for (PVector point : vertices) {
+    for (PVector point : (ArrayList<PVector>)vertices) {
       pt.x += point.x;
       pt.y += point.y;
       pt.z += point.z;
@@ -229,11 +158,16 @@ public class Mesh3D {
   
   // shortcuts from corner index to geometry
   private PVector g(int cornerIndex) {
-    return vertices.get(corners.get(cornerIndex));
+    return vertices.get(v(cornerIndex));
+  }
+
+  // shortcut from corner index to vertex normal
+  private PVector vertexNormal(int cornerIndex) {
+    return vertexNormals.get(v(cornerIndex));
   }
   
   // shortcut to corner
-  private Integer v(Integer cornerIndex) {
+  private Integer v(int cornerIndex) {
     return corners.get(cornerIndex);
   }
   
@@ -243,7 +177,7 @@ public class Mesh3D {
   }
   
   // shortcut to the next corner
-  private static final int n(int cornerIndex) {
+  private int n(int cornerIndex) {
     if (cornerIndex%3 == 2) {
       return cornerIndex-2;
     }
@@ -251,17 +185,22 @@ public class Mesh3D {
   }
 
   // shortcut to the previous corner
-  private static final int p(int cornerIndex) {
+  private int p(int cornerIndex) {
     if (cornerIndex%3 == 0) {
       return cornerIndex+2;
     }
     return cornerIndex-1;
   }
 
-  private static final boolean isBorder(int cornerIndex) {
-    return (opposites.get(cornerIndex)==-1)? true:false;
+  // shortcut to opposite
+  private int o(int cornerIndex) {
+    return opposites.get(cornerIndex);
   }
   
+  private boolean isBorder(int cornerIndex) {
+    return (o(cornerIndex)==-1)? true:false;
+  }
+ 
   private void computeNormals() {
     triangleNormals = new ArrayList();
 
@@ -307,7 +246,7 @@ public class Mesh3D {
       triples.add(new Triplet(min(nextCorner,previousCorner), max(nextCorner,previousCorner), i));
     }
 
-    naiveSort(triples);
+    OTableHelper.naiveSort(triples);
   
     // just pair up the stuff
     for (int i = 0; i < numberOfCorners-1; ++i) {
@@ -330,17 +269,17 @@ public class Mesh3D {
 
   private void splitEdges() {
     // for each corner
-    for (int corner=0; i<numberOfCorners; ++corner) {
+    for (int corner=0; corner<numberOfCorners; ++corner) {
       if (isBorder(corner)) {
-        vertices.add(GeometricOprations.midpt(g(n(i)), g(p(i))));
-        W[i] = vertices.size()-1;
+        vertices.add(geometricOperations.midPt(g(n(corner)), g(p(corner))));
+        //W[corner] = vertices.size()-1;
       }
       else {
         // if this corner is the first to see the edge
-        if (i < o(i)) {
-          vertices.add(GeometricOprations.midpt(g(n(i)), g(p(i))));
-          W[o(i)] = vertices.size()-1;
-          W[i] = vertices.size()-1;
+        if (corner < o(corner)) {
+          vertices.add(geometricOperations.midPt(g(n(corner)), g(p(corner))));
+          //W[o(corner)] = vertices.size()-1;
+          //W[corner] = vertices.size()-1;
         }
       }
     }

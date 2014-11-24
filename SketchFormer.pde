@@ -10,7 +10,7 @@ public Mesh3D getMesh() {
   return mesh;
 }
 
-public GeometricOpertaions getGeometricOperations() {
+public GeometricOperations getGeometricOperations() {
   return geometricOperations;
 }
 
