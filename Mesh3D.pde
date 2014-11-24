@@ -14,6 +14,11 @@ public class Mesh3D {
   private int numberOfVertices;
   private int numberOfCorners;
   private int numberOfTriangles;
+  private final GeometricOperations geometricOperations;
+  
+  public Mesh3D(GeometricOperations geometricOperations) {
+    this.geometricOperations = geometricOperations;
+  }
 
   // for the O-Table
   private final class Triplet {
@@ -253,8 +258,8 @@ public class Mesh3D {
     return cornerIndex-1;
   }
 
-  private static final boolean border(int cornerIndex) {
-    return (opposite[i]==-1)? true:false;
+  private static final boolean isBorder(int cornerIndex) {
+    return (opposites.get(cornerIndex)==-1)? true:false;
   }
   
   private void computeNormals() {
@@ -262,7 +267,7 @@ public class Mesh3D {
 
     // caches normals of all triangles.
     for (int i = 0; i < numberOfTriangles; ++i) {
-      PVector triangleNormal = triNormal(g(i*3), g(i*3+1), g(i*3+2));
+      PVector triangleNormal = geometricOperations.triNormal(g(i*3), g(i*3+1), g(i*3+2));
       triangleNormal.normalize();
       triangleNormals.add(triangleNormal);
     }
@@ -316,13 +321,28 @@ public class Mesh3D {
     }
   }
 
-  private static PVector vector(PVector A, PVector B) {
-    return new PVector(B.x-A.x, B.y-A.y, B.z-A.z);
+  public void refine() {
+//    G.resize(nv * 4);
+//    O.resize(nc * 4);
+//    V.resize(nc * 4);
+//    W.resize(nt * 12);
   }
- 
-  private static PVector triNormal(PVector A, PVector B, PVector C) {
-    PVector AB = vector(A,B);
-    PVector AC = vector(A,C);
-    return AB.cross(AC);
-  }
+
+  private void splitEdges() {
+    // for each corner
+    for (int corner=0; i<numberOfCorners; ++corner) {
+      if (isBorder(corner)) {
+        vertices.add(GeometricOprations.midpt(g(n(i)), g(p(i))));
+        W[i] = vertices.size()-1;
+      }
+      else {
+        // if this corner is the first to see the edge
+        if (i < o(i)) {
+          vertices.add(GeometricOprations.midpt(g(n(i)), g(p(i))));
+          W[o(i)] = vertices.size()-1;
+          W[i] = vertices.size()-1;
+        }
+      }
+    }
+  }  
 }

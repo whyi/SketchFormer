@@ -3,10 +3,15 @@ float yDragged = 0;
 Boolean dragged = false;
 PVector dragCoordinate;
 public Camera3D myCamera = new Camera3D(0,0,-400,100);
-public Mesh3D mesh = new Mesh3D();
+public GeometricOperations geometricOperations = new GeometricOperations();
+public Mesh3D mesh = new Mesh3D(geometricOperations);
 
 public Mesh3D getMesh() {
   return mesh;
+}
+
+public GeometricOpertaions getGeometricOperations() {
+  return geometricOperations;
 }
 
 void setup() {

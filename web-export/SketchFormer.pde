@@ -3,10 +3,15 @@ float yDragged = 0;
 Boolean dragged = false;
 PVector dragCoordinate;
 public Camera3D myCamera = new Camera3D(0,0,-400,100);
-public Mesh3D mesh = new Mesh3D();
+public GeometricOperations geometricOperations = new GeometricOperations();
+public Mesh3D mesh = new Mesh3D(geometricOperations);
 
 public Mesh3D getMesh() {
   return mesh;
+}
+
+public GeometricOpertaions getGeometricOperations() {
+  return geometricOperations;
 }
 
 void setup() {
@@ -172,6 +177,29 @@ public class Camera3D {
     return viewDirComponent;
   }
 }
+// This probably doesn't make sense to be regular class,
+// as static final class make more sense here.
+// However Jasmine cannot deal with it, so it's for testibility purpose only.
+public class GeometricOperations {
+  public static PVector midPt(PVector point1, PVector point2) {
+    PVector point = new PVector(point1.x + point2.x, point1.y + point2.y, point1.z + point2.z);
+    point.div(2);
+    return point;
+  }
+  
+  public static PVector vector(PVector A, PVector B) {
+    return new PVector(B.x-A.x, B.y-A.y, B.z-A.z);
+  }
+ 
+  public static PVector triNormal(PVector A, PVector B, PVector C) {
+    PVector AB = vector(A,B);
+    PVector AC = vector(A,C);
+    PVector normal = AB.cross(AC);
+    normal.normalize();
+    return normal;
+  }  
+}
+
 void keyPressed() {
   if (keyCode == 'w' || keyCode == 'W') {
     myCamera.strafeUp();
@@ -206,6 +234,11 @@ public class Mesh3D {
   private int numberOfVertices;
   private int numberOfCorners;
   private int numberOfTriangles;
+  private final GeometricOperations geometricOperations;
+  
+  public Mesh3D(GeometricOperations geometricOperations) {
+    this.geometricOperations = geometricOperations;
+  }
 
   // for the O-Table
   private final class Triplet {
@@ -445,8 +478,8 @@ public class Mesh3D {
     return cornerIndex-1;
   }
 
-  private static final boolean border(int cornerIndex) {
-    return (opposite[i]==-1)? true:false;
+  private static final boolean isBorder(int cornerIndex) {
+    return (opposites.get(cornerIndex)==-1)? true:false;
   }
   
   private void computeNormals() {
@@ -454,7 +487,7 @@ public class Mesh3D {
 
     // caches normals of all triangles.
     for (int i = 0; i < numberOfTriangles; ++i) {
-      PVector triangleNormal = triNormal(g(i*3), g(i*3+1), g(i*3+2));
+      PVector triangleNormal = geometricOperations.triNormal(g(i*3), g(i*3+1), g(i*3+2));
       triangleNormal.normalize();
       triangleNormals.add(triangleNormal);
     }
@@ -508,15 +541,30 @@ public class Mesh3D {
     }
   }
 
-  private static PVector vector(PVector A, PVector B) {
-    return new PVector(B.x-A.x, B.y-A.y, B.z-A.z);
+  public void refine() {
+//    G.resize(nv * 4);
+//    O.resize(nc * 4);
+//    V.resize(nc * 4);
+//    W.resize(nt * 12);
   }
- 
-  private static PVector triNormal(PVector A, PVector B, PVector C) {
-    PVector AB = vector(A,B);
-    PVector AC = vector(A,C);
-    return AB.cross(AC);
-  }
+
+  private void splitEdges() {
+    // for each corner
+    for (int corner=0; i<numberOfCorners; ++corner) {
+      if (isBorder(corner)) {
+        vertices.add(GeometricOprations.midpt(g(n(i)), g(p(i))));
+        W[i] = vertices.size()-1;
+      }
+      else {
+        // if this corner is the first to see the edge
+        if (i < o(i)) {
+          vertices.add(GeometricOprations.midpt(g(n(i)), g(p(i))));
+          W[o(i)] = vertices.size()-1;
+          W[i] = vertices.size()-1;
+        }
+      }
+    }
+  }  
 }
 void mouseScrolled() {
    if (mouseScroll > 0) {
