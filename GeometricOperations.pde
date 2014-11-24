@@ -1,7 +1,7 @@
 // This probably doesn't make sense to be regular class,
 // as static final class make more sense here.
 // However Jasmine cannot deal with it, so it's for testibility purpose only.
-public class GeometricOperations {
+public static class GeometricOperations {
   public static PVector midPt(PVector point1, PVector point2) {
     PVector point = new PVector(point1.x + point2.x, point1.y + point2.y, point1.z + point2.z);
     point.div(2);
