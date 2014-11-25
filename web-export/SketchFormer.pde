@@ -2,7 +2,7 @@ float xDragged = 0;
 float yDragged = 0;
 Boolean dragged = false;
 PVector dragCoordinate;
-public Camera3D myCamera = new Camera3D(0,0,-400,100);
+public Camera myCamera = new Camera(0,0,-400,100);
 public GeometricOperations geometricOperations = new GeometricOperations();
 public OTableHelper myOTableHelper = new OTableHelper();
 public Mesh mesh = new Mesh(geometricOperations, myOTableHelper);
@@ -44,7 +44,7 @@ void renderMesh() {
 public final float ROTATION_STEP = 0.1f;
 public final float PI_DIV_BY_180 = PI/180.0;
 
-public class Camera3D {
+public class Camera {
   public float zoomFactor = 10;
   private PVector rightVector = new PVector(1,0,0);
   private PVector upVector = new PVector(0,1,0);
@@ -55,12 +55,12 @@ public class Camera3D {
   public float rotatedX = 0;
   public float rotatedY = 0;
 
-  public Camera3D(float x, float y, float z, float strafeFactor) {
+  public Camera(float x, float y, float z, float strafeFactor) {
     this.position = new PVector(x, y, z);
     this.strafeFactor = strafeFactor;   
   }
   
-  public Camera3D(PVector position, float strafeFactor) {
+  public Camera(PVector position, float strafeFactor) {
     this.position = position;
     this.strafeFactor = strafeFactor;
   }  
