@@ -15,9 +15,11 @@ public class Mesh3D {
   private int numberOfCorners;
   private int numberOfTriangles;
   private final GeometricOperations geometricOperations;
+  private final OTableHelper myOTableHelper;
   
-  public Mesh3D(GeometricOperations geometricOperations) {
+  public Mesh3D(GeometricOperations geometricOperations, OTableHelper myOTableHelper) {
     this.geometricOperations = geometricOperations;
+    this.myOTableHelper = myOTableHelper;
   }
 
   public float diag() {
@@ -246,7 +248,7 @@ public class Mesh3D {
       triples.add(new Triplet(min(nextCorner,previousCorner), max(nextCorner,previousCorner), i));
     }
 
-    OTableHelper.naiveSort(triples);
+    myOTableHelper.naiveSort(triples);
   
     // just pair up the stuff
     for (int i = 0; i < numberOfCorners-1; ++i) {
