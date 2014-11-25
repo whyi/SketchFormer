@@ -5,9 +5,9 @@ PVector dragCoordinate;
 public Camera3D myCamera = new Camera3D(0,0,-400,100);
 public GeometricOperations geometricOperations = new GeometricOperations();
 public OTableHelper myOTableHelper = new OTableHelper();
-public Mesh3D mesh = new Mesh3D(geometricOperations, myOTableHelper);
+public Mesh mesh = new Mesh(geometricOperations, myOTableHelper);
 
-public Mesh3D getMesh() {
+public Mesh getMesh() {
   return mesh;
 }
 
@@ -224,7 +224,7 @@ void keyPressed() {
 }
 
 import java.util.Collections;
-public class Mesh3D {
+public class Mesh {
   private static final String MESH_API_URL = "http://www.whyi.net/bunny.json";
   private ArrayList<PVector> vertices = null;
   private ArrayList<Integer> corners = null;
@@ -242,7 +242,7 @@ public class Mesh3D {
   private final GeometricOperations geometricOperations;
   private final OTableHelper myOTableHelper;
   
-  public Mesh3D(GeometricOperations geometricOperations, OTableHelper myOTableHelper) {
+  public Mesh(GeometricOperations geometricOperations, OTableHelper myOTableHelper) {
     this.geometricOperations = geometricOperations;
     this.myOTableHelper = myOTableHelper;
   }
