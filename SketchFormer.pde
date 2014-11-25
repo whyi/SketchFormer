@@ -4,7 +4,8 @@ Boolean dragged = false;
 PVector dragCoordinate;
 public Camera3D myCamera = new Camera3D(0,0,-400,100);
 public GeometricOperations geometricOperations = new GeometricOperations();
-public Mesh3D mesh = new Mesh3D(geometricOperations);
+public OTableHelper myOTableHelper = new OTableHelper();
+public Mesh3D mesh = new Mesh3D(geometricOperations, myOTableHelper);
 
 public Mesh3D getMesh() {
   return mesh;
@@ -12,6 +13,10 @@ public Mesh3D getMesh() {
 
 public GeometricOperations getGeometricOperations() {
   return geometricOperations;
+}
+
+public OTableHelper getOTableHelper() {
+  return myOTableHelper;
 }
 
 void setup() {

@@ -1,11 +1,11 @@
-public static class OTableHelper {
-  private static void swap(ArrayList list, int a, int b) {
+public class OTableHelper {
+  private void swap(ArrayList list, int a, int b) {
     Triplet tmp = (Triplet) list.get(a);
     list.set(a, list.get(b));
     list.set(b, tmp);
   }
 
-  private static int partition(ArrayList list, int left, int right) {
+  private int partition(ArrayList list, int left, int right) {
     int pivotIndex = floor((left + right)/2);
     final Triplet pivotValue = (Triplet) list.get(pivotIndex);
     swap(list, pivotIndex, right);
@@ -22,7 +22,7 @@ public static class OTableHelper {
     return storedIndex;
   }
   
-  private static ArrayList naiveQuickSort(ArrayList list, int left, int right) {
+  private ArrayList naiveQuickSort(ArrayList list, int left, int right) {
     if (left < right) {
       final int pivot = partition(list, left, right);
       naiveQuickSort(list, left, pivot-1);
@@ -31,7 +31,7 @@ public static class OTableHelper {
     return list;
   }
 
-  public static ArrayList naiveSort(ArrayList list) {
+  public ArrayList naiveSort(ArrayList list) {
     return naiveQuickSort(list, 0, list.size()-1);
   }
 }

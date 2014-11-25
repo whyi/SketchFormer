@@ -77,7 +77,7 @@
         });
       });
     });
-    return describe("GeometricOperations", function() {
+    describe("GeometricOperations", function() {
       beforeEach(function() {
         this.pjs = Processing.getInstanceById(getProcessingSketchId());
         return this.geometricOpertaions = this.pjs.getGeometricOperations();
@@ -150,6 +150,50 @@
           return expect(this.geometricOpertaions.triNormal(pointA, pointB, pointC)).toEqual(expectedNormal);
         });
       });
+    });
+    describe("Triplet", function() {
+      beforeEach(function() {
+        return this.pjs = Processing.getInstanceById(getProcessingSketchId());
+      });
+      it("should support inequality", function() {
+        this.triplet = new this.pjs.Triplet(1, 2, 3);
+        return expect(this.triplet.isLessThan).toBeDefined();
+      });
+      return describe("isLessThan", function() {
+        it("should return false when inequality is false", function() {
+          var biggerTriplet, smallerTriplet;
+          biggerTriplet = new this.pjs.Triplet(2, 2, 2);
+          smallerTriplet = new this.pjs.Triplet(1, 1, 1);
+          return expect(biggerTriplet.isLessThan(smallerTriplet)).toBe(false);
+        });
+        return it("should return true when inequality is true", function() {
+          var biggerTriplet, smallerTriplet;
+          biggerTriplet = new this.pjs.Triplet(2, 2, 2);
+          smallerTriplet = new this.pjs.Triplet(1, 1, 1);
+          return expect(smallerTriplet.isLessThan(biggerTriplet)).toBe(true);
+        });
+      });
+    });
+    return describe("OTableHelper", function() {
+      beforeEach(function() {
+        this.pjs = Processing.getInstanceById(getProcessingSketchId());
+        return this.OTableHelper = this.pjs.getOTableHelper();
+      });
+      return it("should support sorting", function() {
+        return expect(this.OTableHelper.naiveSort).toBeDefined();
+      });
+
+      /*
+      describe "naiveSort", ->
+        it "should be able to sort Triplets", ->
+          sortedTriplets = []
+          for i in [0..10] by 1
+            sortedTriplets.push(new @pjs.Triplet(i,i,i))
+      
+          unsortedTriplets = sortedTriplets.reverse()
+          @OTableHelper.naitveSort(unsortedTriplets)
+          expect(true).toBe(false)
+       */
     });
   });
 
