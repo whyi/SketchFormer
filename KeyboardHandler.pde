@@ -14,5 +14,9 @@ void keyPressed() {
   if (keyCode == 'd' || keyCode == 'D') {
     myCamera.strafeRight();
   }
+  
+  if (keyCode == 'q' || keyCode == 'Q') {
+    mesh.splitEdges();
+  }  
 }
 
