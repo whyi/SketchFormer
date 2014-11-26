@@ -66,6 +66,24 @@ describe "SketchFormer", ->
       it "should mark the mesh as loaded", ->
         expect(@mesh.loaded).toBe(true)
 
+    # FIXME : somehow remove the automatic-loading so that I can easily test these features..
+    describe "splitEdges", ->
+      beforeEach ->
+        spyOn(@mesh, "isBorder").and.callThrough()
+        spyOn(@mesh, "o").and.callThrough()
+        @mesh.loadMesh();
+        @previousNumberOfVertices = @mesh.numberOfVertices
+        @mesh.splitEdges();
+
+      it "should check whether a corner is border or not", ->
+        expect(@mesh.isBorder).toHaveBeenCalled()
+
+      it "should check whether a corner has been seen or not", ->
+        expect(@mesh.o).toHaveBeenCalled()
+
+      it "should increase the # of vertices by 4 minus # of boundries", ->
+        expect(@mesh.numberOfVertices).toBe(402)
+
   describe "GeometricOperations", ->
     beforeEach ->
       @pjs = Processing.getInstanceById(getProcessingSketchId())
@@ -115,10 +133,12 @@ describe "SketchFormer", ->
   describe "OTableHelper", ->
     beforeEach ->
       @pjs = Processing.getInstanceById(getProcessingSketchId())
+      @OTableHelper = @pjs.getOTableHelper()
 
     it "should support sorting", ->
-      expect(@pjs.OTableHelper.naiveSort).toBeDefined()
+      expect(@OTableHelper.naiveSort).toBeDefined()
 
+    ###
     describe "naiveSort", ->
       it "should be able to sort Triplets", ->
         sortedTriplets = []
@@ -126,6 +146,7 @@ describe "SketchFormer", ->
           sortedTriplets.push(new @pjs.Triplet(i,i,i))
 
         unsortedTriplets = sortedTriplets.reverse()
-        OTableHelper = new @pjs.OTableHelper
-        OTableHelper.naitveQuickSort(unsortedTriplets, 0, unsortedTriplets.length-1)
+        @OTableHelper.naitveSort(unsortedTriplets)
         expect(true).toBe(false)
+    ###
+

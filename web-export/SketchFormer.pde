@@ -221,14 +221,18 @@ void keyPressed() {
   if (keyCode == 'd' || keyCode == 'D') {
     myCamera.strafeRight();
   }
+  
+  if (keyCode == 'q' || keyCode == 'Q') {
+    mesh.splitEdges();
+  }  
 }
 
 import java.util.Collections;
 public class Mesh3D {
   private static final String MESH_API_URL = "http://www.whyi.net/bunny.json";
   private ArrayList<PVector> vertices = null;
-  private ArrayList<Integer> corners = null;
-  private ArrayList<Integer> opposites = null;
+  private ArrayList<integer> corners = null;
+  private ArrayList<integer> opposites = null;
   private ArrayList<PVector> vertexNormals = null;
   private ArrayList<PVector> triangleNormals = null;
   private boolean loaded = false;
@@ -330,6 +334,7 @@ public class Mesh3D {
         vertex(c.x, c.y, c.z);
       endShape();
     }
+    
     pushMatrix();
       noStroke();
       sphere(0);
@@ -394,7 +399,7 @@ public class Mesh3D {
   }
   
   // shortcut to corner
-  private Integer v(int cornerIndex) {
+  private integer v(int cornerIndex) {
     return corners.get(cornerIndex);
   }
   
@@ -488,13 +493,12 @@ public class Mesh3D {
   }
 
   public void refine() {
-//    G.resize(nv * 4);
-//    O.resize(nc * 4);
-//    V.resize(nc * 4);
+    splitEdges();
+//    burge();
 //    W.resize(nt * 12);
   }
 
-  private void splitEdges() {
+  public void splitEdges() {
     // for each corner
     for (int corner=0; corner<numberOfCorners; ++corner) {
       if (isBorder(corner)) {
@@ -510,8 +514,26 @@ public class Mesh3D {
         }
       }
     }
-  }  
+    numberOfVertices = vertices.size();
+  }
 }
+
+//public void bulge() {
+//  for (int i = 0; i < 3*nt; i++) {
+//    // no tweak for mid-vertices of border edges
+//    if ((nb(i)) && (i<o(i)) ) {
+//      if (nb(p(i))&&nb(n(i))&&nb(p(o(i)))&&nb(n(o(i)))) {
+//        vertices.get(W[i]).addScaledVec(
+//          0.25,
+//          midPt(g(i),g(o(i)))-
+//          midPt(
+//            midPt(g(l(i)),g(r(i))),
+//            midPt(g(l(o(i))),g(r(o(i))))));
+//      }
+//    }
+//  }
+//}
+
 void mouseScrolled() {
    if (mouseScroll > 0) {
      myCamera.zoomIn();

@@ -43,7 +43,7 @@
           });
         });
       });
-      return describe("when loadMesh()", function() {
+      describe("when loadMesh()", function() {
         beforeEach(function() {
           spyOn(this.mesh, "computeBoundingBox");
           spyOn(this.mesh, "computeNormals");
@@ -74,6 +74,24 @@
         });
         return it("should mark the mesh as loaded", function() {
           return expect(this.mesh.loaded).toBe(true);
+        });
+      });
+      return describe("splitEdges", function() {
+        beforeEach(function() {
+          spyOn(this.mesh, "isBorder").and.callThrough();
+          spyOn(this.mesh, "o").and.callThrough();
+          this.mesh.loadMesh();
+          this.previousNumberOfVertices = this.mesh.numberOfVertices;
+          return this.mesh.splitEdges();
+        });
+        it("should check whether a corner is border or not", function() {
+          return expect(this.mesh.isBorder).toHaveBeenCalled();
+        });
+        it("should check whether a corner has been seen or not", function() {
+          return expect(this.mesh.o).toHaveBeenCalled();
+        });
+        return it("should increase the # of vertices by 4 minus # of boundries", function() {
+          return expect(this.mesh.numberOfVertices).toBe(402);
         });
       });
     });
