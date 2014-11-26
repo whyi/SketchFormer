@@ -1,5 +1,5 @@
 import java.util.Collections;
-public class Mesh3D {
+public class Mesh {
   private static final String MESH_API_URL = "http://www.whyi.net/bunny.json";
   private ArrayList<PVector> vertices = null;
   private ArrayList<integer> corners = null;
@@ -17,7 +17,7 @@ public class Mesh3D {
   private final GeometricOperations geometricOperations;
   private final OTableHelper myOTableHelper;
   
-  public Mesh3D(GeometricOperations geometricOperations, OTableHelper myOTableHelper) {
+  public Mesh(GeometricOperations geometricOperations, OTableHelper myOTableHelper) {
     this.geometricOperations = geometricOperations;
     this.myOTableHelper = myOTableHelper;
   }

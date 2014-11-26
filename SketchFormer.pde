@@ -2,12 +2,12 @@ float xDragged = 0;
 float yDragged = 0;
 Boolean dragged = false;
 PVector dragCoordinate;
-public Camera3D myCamera = new Camera3D(0,0,-400,100);
+public Camera myCamera = new Camera(0,0,-400,100);
 public GeometricOperations geometricOperations = new GeometricOperations();
 public OTableHelper myOTableHelper = new OTableHelper();
-public Mesh3D mesh = new Mesh3D(geometricOperations, myOTableHelper);
+public Mesh mesh = new Mesh(geometricOperations, myOTableHelper);
 
-public Mesh3D getMesh() {
+public Mesh getMesh() {
   return mesh;
 }
 
