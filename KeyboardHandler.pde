@@ -16,7 +16,7 @@ void keyPressed() {
   }
   
   if (keyCode == 'q' || keyCode == 'Q') {
-    mesh.splitEdges();
+    mesh.refine();
   }  
 }
 
