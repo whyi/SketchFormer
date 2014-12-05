@@ -333,27 +333,42 @@ public class Mesh {
     }
   }
 
-  private void splitTriangles(void) {
+  private void splitTriangles() {
+    // $$$ FIXME: maybe those indices in the for loop can be replaced with the numberOfTriangles
+    //            instead of corners, given that I'm doing corner+=3
+
     for (int corner = 0; corner < numberOfCorners; corner+=3) {
+
+      final int previousCorner = temporaryCorners[p(corner)];
+      final int nextCorner = temporaryCorners[n(corner)];
+
       int cornerIndex = 3*numberOfTriangles+corner;
+
       corners.set(cornerIndex, v(corner));
-      corners.set(n(cornerIndex), temporaryCorners[p(corner)]);
-      corners.set(p(cornerIndex), temporaryCorners[n(corner)]);
+      corners.set(n(cornerIndex), temporaryCorners[previousCorner]);
+      corners.set(p(cornerIndex), temporaryCorners[nextCorner]);
       
-      int cornerIndex = 6*numberOfTriangles;
+      cornerIndex = 6*numberOfTriangles+corner;
       corners.set(cornerIndex, v(corner));
-      corners.set(n(cornerIndex), temporaryCorners[p(corner)]);
-      corners.set(p(cornerIndex), temporaryCorners[n(corner)]);      
-     
-      V[6*nt+i] = v(n(i));
-      V[n(6*nt+i)]=w(i)
-      V[p(6*nt+i)]=w(p(i));
+      corners.set(n(cornerIndex), temporaryCorners[previousCorner]);
+      corners.set(p(cornerIndex), temporaryCorners[nextCorner]);
+
+      cornerIndex = 9*numberOfTriangles+corner;
+      corners.set(cornerIndex, v(corner));
+      corners.set(n(cornerIndex), temporaryCorners[previousCorner]);
+      corners.set(p(cornerIndex), temporaryCorners[nextCorner]);
+
+      cornerIndex = 9*numberOfTriangles+corner;
+      corners.set(cornerIndex, v(corner));
+      corners.set(n(cornerIndex), temporaryCorners[previousCorner]);
+      corners.set(p(cornerIndex), temporaryCorners[nextCorner]);
       
-      V[9*nt+i] = v(p(i)); V[n(9*nt+i)]=w(n(i)); V[p(9*nt+i)]=w(i);
-      V[i]=w(i); V[n(i)]=w(n(i)); V[p(i)]=w(p(i));
+      corners.set(corner, temporaryCorners[corner]);
+      corners.set(n(cornerIndex), temporaryCorners[previousCorner]);
+      corners.set(p(cornerIndex), temporaryCorners[nextCorner]);
     }
-    nt = 4*nt;
-    nc = 3*nt;
+    numberOfTriangles = 4*numberOfTriangles;
+    numberOfCorners = 3*numberOfTriangles;
   }
 }
 
