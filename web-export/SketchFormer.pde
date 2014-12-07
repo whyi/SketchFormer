@@ -223,18 +223,20 @@ void keyPressed() {
   }
   
   if (keyCode == 'q' || keyCode == 'Q') {
-    mesh.splitEdges();
+    mesh.refine();
   }  
 }
 
 import java.util.Collections;
 public class Mesh {
+  private static final int BOUNDARY;
   private static final String MESH_API_URL = "http://www.whyi.net/bunny.json";
   private ArrayList<PVector> vertices = null;
-  private ArrayList<integer> corners = null;
-  private ArrayList<integer> opposites = null;
+  private ArrayList<Integer> corners = null;
+  private ArrayList<Integer> opposites = null;
   private ArrayList<PVector> vertexNormals = null;
   private ArrayList<PVector> triangleNormals = null;
+  private Integer[] temporaryCorners = null;
   private boolean loaded = false;
   private PVector geometricCenter;
   private PVector minimumCoordinates;
@@ -305,7 +307,7 @@ public class Mesh {
 
  
   public void render() {
-    if (loaded == false)
+    if (!loaded)
       return;
 
     directionalLight(126, 126, 126, 0, 0, -1);
@@ -399,7 +401,7 @@ public class Mesh {
   }
   
   // shortcut to corner
-  private integer v(int cornerIndex) {
+  private int v(int cornerIndex) {
     return corners.get(cornerIndex);
   }
   
@@ -424,13 +426,23 @@ public class Mesh {
     return cornerIndex-1;
   }
 
-  // shortcut to opposite
+  // shortcut to the opposite
   private int o(int cornerIndex) {
     return opposites.get(cornerIndex);
   }
+
+  // shortcut to the left corner
+  private int leftOf(int cornerIndex) {
+    return o(n(cornerIndex));
+  }
+  
+  // shortcut to the right corner
+  private int rightOf(int cornerIndex) {
+    return o(p(cornerIndex));
+  }
   
   private boolean isBorder(int cornerIndex) {
-    return (o(cornerIndex)==-1)? true:false;
+    return o(cornerIndex) == BOUNDARY;
   }
  
   private void computeNormals() {
@@ -493,9 +505,17 @@ public class Mesh {
   }
 
   public void refine() {
+    console.log("splitting " + numberOfTriangles);
+    temporaryCorners = new Integer[numberOfTriangles*12];
+    // FIXME : initializing with the size doesn't work.
     splitEdges();
-//    burge();
-//    W.resize(nt * 12);
+    console.log("done!");
+    console.log("bulging");
+    bulge();
+    console.log("done!");
+    console.log("spliting triangles");
+    splitTriangles();
+    console.log("done!");
   }
 
   public void splitEdges() {
@@ -503,36 +523,68 @@ public class Mesh {
     for (int corner=0; corner<numberOfCorners; ++corner) {
       if (isBorder(corner)) {
         vertices.add(geometricOperations.midPt(g(n(corner)), g(p(corner))));
-        //W[corner] = vertices.size()-1;
+        temporaryCorners[corner] = vertices.size()-1;
       }
       else {
         // if this corner is the first to see the edge
         if (corner < o(corner)) {
           vertices.add(geometricOperations.midPt(g(n(corner)), g(p(corner))));
-          //W[o(corner)] = vertices.size()-1;
-          //W[corner] = vertices.size()-1;
+          temporaryCorners[o(corner)] = vertices.size()-1;
+          temporaryCorners[corner] = vertices.size()-1;
         }
       }
     }
     numberOfVertices = vertices.size();
   }
-}
 
-//public void bulge() {
-//  for (int i = 0; i < 3*nt; i++) {
-//    // no tweak for mid-vertices of border edges
-//    if ((nb(i)) && (i<o(i)) ) {
-//      if (nb(p(i))&&nb(n(i))&&nb(p(o(i)))&&nb(n(o(i)))) {
-//        vertices.get(W[i]).addScaledVec(
-//          0.25,
-//          midPt(g(i),g(o(i)))-
-//          midPt(
-//            midPt(g(l(i)),g(r(i))),
-//            midPt(g(l(o(i))),g(r(o(i))))));
-//      }
-//    }
-//  }
-//}
+  // Bulge Operation does the following:
+  private void bulge() {
+    for (int corner = 0; corner < numberOfCorners; corner++) {
+      // no tweak for mid-vertices of border edges
+      final int oppositeCorner = o(corner);
+      final int previousCorner = p(corner);
+      final int nextCorner = n(corner);
+      if (!isBorder(corner) &&
+        corner < oppositeCorner &&
+        !isBorder(previousCorner) && 
+        !isBorder(nextCorner) &&
+        !isBorder(p(oppositeCorner)) &&
+        !isBorder(n(oppositeCorner))) {
+        final PVector vertex = vertices.get(temporaryCorners[corner]);
+        final PVector neighboringVector = geometricOperations.midPt(g(leftOf(corner)),g(rightOf(corner)));
+        final PVector farNeighboringVector = geometricOperations.midPt(g(leftOf(oppositeCorner)),g(rightOf(oppositeCorner)));
+        final PVector midNeighboringVector = geometricOperations.midPt(neighboringVector, farNeighboringVector);
+        final PVector oppositeVector = geometricOperations.midPt(g(corner), g(oppositeCorner));
+        final PVector vectorToAdd = geometricOperations.vector(oppositeVector, midNeighboringVector);
+        vectorToAdd.mult(0.25);
+        vertex.add(vectorToAdd);
+      }
+    }
+  }
+
+  private void splitTriangles(void) {
+    for (int corner = 0; corner < numberOfCorners; corner+=3) {
+      int cornerIndex = 3*numberOfTriangles+corner;
+      corners.set(cornerIndex, v(corner));
+      corners.set(n(cornerIndex), temporaryCorners[p(corner)]);
+      corners.set(p(cornerIndex), temporaryCorners[n(corner)]);
+      
+      int cornerIndex = 6*numberOfTriangles;
+      corners.set(cornerIndex, v(corner));
+      corners.set(n(cornerIndex), temporaryCorners[p(corner)]);
+      corners.set(p(cornerIndex), temporaryCorners[n(corner)]);      
+     
+      V[6*nt+i] = v(n(i));
+      V[n(6*nt+i)]=w(i)
+      V[p(6*nt+i)]=w(p(i));
+      
+      V[9*nt+i] = v(p(i)); V[n(9*nt+i)]=w(n(i)); V[p(9*nt+i)]=w(i);
+      V[i]=w(i); V[n(i)]=w(n(i)); V[p(i)]=w(p(i));
+    }
+    nt = 4*nt;
+    nc = 3*nt;
+  }
+}
 
 void mouseScrolled() {
    if (mouseScroll > 0) {
