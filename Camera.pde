@@ -1,8 +1,6 @@
-public final float ROTATION_STEP = 0.1f;
-public final float PI_DIV_BY_180 = PI/180.0;
-
 public class Camera {
-  public float zoomFactor = 10;
+  private static final float ZOOM_FACTOR = 10;
+  private static final float PI_DIV_BY_180 = PI/180.0;
   private PVector rightVector = new PVector(1,0,0);
   private PVector upVector = new PVector(0,1,0);
   private PVector viewDir = new PVector(0,0,-1);
@@ -118,21 +116,21 @@ public class Camera {
   }
   
   public void zoomOut() {
-    PVector v = new PVector(viewDir.x, viewDir.y, viewDir.z);
-    v.mult(-zoomFactor);
-    position.x += v.x;
-    position.y += v.y;
-    position.z += v.z; 
+    zoom(-ZOOM_FACTOR); 
   }
   
   public void zoomIn() {
+    zoom(ZOOM_FACTOR);
+  }
+
+  private void zoom(float zoomFactor) {
     PVector v = new PVector(viewDir.x, viewDir.y, viewDir.z);
     v.mult(zoomFactor);
     position.x += v.x;
     position.y += v.y;
     position.z += v.z;    
   }
-  
+
   private PVector getViewDirComponent(float angle) {
     PVector viewDirComponent = viewDir.get();
     viewDirComponent.mult(cos(angle*PI_DIV_BY_180));

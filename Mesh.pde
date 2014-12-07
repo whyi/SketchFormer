@@ -333,7 +333,7 @@ public class Mesh {
     }
   }
 
-  private void splitTriangles(void) {
+  private void splitTriangles() {
     for (int corner = 0; corner < numberOfCorners; corner+=3) {
       int cornerIndex = 3*numberOfTriangles+corner;
       corners.set(cornerIndex, v(corner));
@@ -345,15 +345,15 @@ public class Mesh {
       corners.set(n(cornerIndex), temporaryCorners[p(corner)]);
       corners.set(p(cornerIndex), temporaryCorners[n(corner)]);      
      
-      V[6*nt+i] = v(n(i));
-      V[n(6*nt+i)]=w(i)
-      V[p(6*nt+i)]=w(p(i));
-      
-      V[9*nt+i] = v(p(i)); V[n(9*nt+i)]=w(n(i)); V[p(9*nt+i)]=w(i);
-      V[i]=w(i); V[n(i)]=w(n(i)); V[p(i)]=w(p(i));
+//      V[6*nt+i] = v(n(i));
+//      V[n(6*nt+i)]=w(i)
+//      V[p(6*nt+i)]=w(p(i));
+//      
+//      V[9*nt+i] = v(p(i)); V[n(9*nt+i)]=w(n(i)); V[p(9*nt+i)]=w(i);
+//      V[i]=w(i); V[n(i)]=w(n(i)); V[p(i)]=w(p(i));
     }
-    nt = 4*nt;
-    nc = 3*nt;
+//    nt = 4*nt;
+//    nc = 3*nt;
   }
 }
 
