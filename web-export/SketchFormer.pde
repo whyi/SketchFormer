@@ -41,11 +41,9 @@ void renderMesh() {
     mesh.render();
   popMatrix();
 }
-public final float ROTATION_STEP = 0.1f;
-public final float PI_DIV_BY_180 = PI/180.0;
-
 public class Camera {
-  public float zoomFactor = 10;
+  private static final float ZOOM_FACTOR = 10;
+  private static final float PI_DIV_BY_180 = PI/180.0;
   private PVector rightVector = new PVector(1,0,0);
   private PVector upVector = new PVector(0,1,0);
   private PVector viewDir = new PVector(0,0,-1);
@@ -161,21 +159,21 @@ public class Camera {
   }
   
   public void zoomOut() {
-    PVector v = new PVector(viewDir.x, viewDir.y, viewDir.z);
-    v.mult(-zoomFactor);
-    position.x += v.x;
-    position.y += v.y;
-    position.z += v.z; 
+    zoom(-ZOOM_FACTOR); 
   }
   
   public void zoomIn() {
+    zoom(ZOOM_FACTOR);
+  }
+
+  private void zoom(float zoomFactor) {
     PVector v = new PVector(viewDir.x, viewDir.y, viewDir.z);
     v.mult(zoomFactor);
     position.x += v.x;
     position.y += v.y;
     position.z += v.z;    
   }
-  
+
   private PVector getViewDirComponent(float angle) {
     PVector viewDirComponent = viewDir.get();
     viewDirComponent.mult(cos(angle*PI_DIV_BY_180));
@@ -229,7 +227,7 @@ void keyPressed() {
 
 import java.util.Collections;
 public class Mesh {
-  private static final int BOUNDARY;
+  private static final int BOUNDARY = -1;
   private static final String MESH_API_URL = "http://www.whyi.net/bunny.json";
   private ArrayList<PVector> vertices = null;
   private ArrayList<Integer> corners = null;
@@ -505,6 +503,7 @@ public class Mesh {
   }
 
   public void refine() {
+    loaded = false;
     console.log("splitting " + numberOfTriangles);
     temporaryCorners = new Integer[numberOfTriangles*12];
     // FIXME : initializing with the size doesn't work.
@@ -516,6 +515,9 @@ public class Mesh {
     console.log("spliting triangles");
     splitTriangles();
     console.log("done!");
+    buildOTable();
+    computeNormals();
+    loaded = true;
   }
 
   public void splitEdges() {
@@ -556,33 +558,48 @@ public class Mesh {
         final PVector midNeighboringVector = geometricOperations.midPt(neighboringVector, farNeighboringVector);
         final PVector oppositeVector = geometricOperations.midPt(g(corner), g(oppositeCorner));
         final PVector vectorToAdd = geometricOperations.vector(oppositeVector, midNeighboringVector);
-        vectorToAdd.mult(0.25);
+        vectorToAdd.mult(-0.25);
         vertex.add(vectorToAdd);
       }
     }
   }
 
-  private void splitTriangles(void) {
+  private void addPreviousAndNextCorners(int cornerIndex, int previousCorner, int nextCorner) {
+    corners.set(n(cornerIndex), temporaryCorners[previousCorner]);
+    corners.set(p(cornerIndex), temporaryCorners[nextCorner]);
+  }
+
+  private void splitTriangles() {
+    // FIXME : see if the processing.js version of ArrayList supports .reserve or .resize or whatever for this...
+    for (int corner = numberOfCorners; corner < numberOfCorners*4; ++corner) {
+      corners.add(BOUNDARY);
+    }
+
     for (int corner = 0; corner < numberOfCorners; corner+=3) {
+      final int previousCorner = temporaryCorners[p(corner)];
+      final int nextCorner = temporaryCorners[n(corner)];
+
       int cornerIndex = 3*numberOfTriangles+corner;
       corners.set(cornerIndex, v(corner));
-      corners.set(n(cornerIndex), temporaryCorners[p(corner)]);
-      corners.set(p(cornerIndex), temporaryCorners[n(corner)]);
+      corners.set(n(cornerIndex), previousCorner);
+      corners.set(p(cornerIndex), nextCorner);
       
-      int cornerIndex = 6*numberOfTriangles;
-      corners.set(cornerIndex, v(corner));
-      corners.set(n(cornerIndex), temporaryCorners[p(corner)]);
-      corners.set(p(cornerIndex), temporaryCorners[n(corner)]);      
-     
-      V[6*nt+i] = v(n(i));
-      V[n(6*nt+i)]=w(i)
-      V[p(6*nt+i)]=w(p(i));
+      cornerIndex = 6*numberOfTriangles+corner;
+      corners.set(cornerIndex, v(n(corner)));
+      corners.set(n(cornerIndex), temporaryCorners[corner]);
+      corners.set(p(cornerIndex), previousCorner);
+
+      cornerIndex = 9*numberOfTriangles+corner;
+      corners.set(cornerIndex, v(p(corner)));
+      corners.set(n(cornerIndex), nextCorner);
+      corners.set(p(cornerIndex), temporaryCorners[corner]);
       
-      V[9*nt+i] = v(p(i)); V[n(9*nt+i)]=w(n(i)); V[p(9*nt+i)]=w(i);
-      V[i]=w(i); V[n(i)]=w(n(i)); V[p(i)]=w(p(i));
+      corners.set(corner, temporaryCorners[corner]);
+      corners.set(n(corner), nextCorner);
+      corners.set(p(corner), previousCorner);
     }
-    nt = 4*nt;
-    nc = 3*nt;
+    numberOfTriangles = 4*numberOfTriangles;
+    numberOfCorners = 3*numberOfTriangles;
   }
 }
 

@@ -1,6 +1,6 @@
 import java.util.Collections;
 public class Mesh {
-  private static final int BOUNDARY;
+  private static final int BOUNDARY = -1;
   private static final String MESH_API_URL = "http://www.whyi.net/bunny.json";
   private ArrayList<PVector> vertices = null;
   private ArrayList<Integer> corners = null;
@@ -276,6 +276,7 @@ public class Mesh {
   }
 
   public void refine() {
+    loaded = false;
     console.log("splitting " + numberOfTriangles);
     temporaryCorners = new Integer[numberOfTriangles*12];
     // FIXME : initializing with the size doesn't work.
@@ -287,6 +288,9 @@ public class Mesh {
     console.log("spliting triangles");
     splitTriangles();
     console.log("done!");
+    buildOTable();
+    computeNormals();
+    loaded = true;
   }
 
   public void splitEdges() {
@@ -327,36 +331,45 @@ public class Mesh {
         final PVector midNeighboringVector = geometricOperations.midPt(neighboringVector, farNeighboringVector);
         final PVector oppositeVector = geometricOperations.midPt(g(corner), g(oppositeCorner));
         final PVector vectorToAdd = geometricOperations.vector(oppositeVector, midNeighboringVector);
-        vectorToAdd.mult(0.25);
+        vectorToAdd.mult(-0.25);
         vertex.add(vectorToAdd);
       }
     }
   }
 
+  private void addPreviousAndNextCorners(int cornerIndex, int previousCorner, int nextCorner) {
+    corners.set(n(cornerIndex), temporaryCorners[previousCorner]);
+    corners.set(p(cornerIndex), temporaryCorners[nextCorner]);
+  }
+
   private void splitTriangles() {
-    // $$$ FIXME: maybe those indices in the for loop can be replaced with the numberOfTriangles
-    //            instead of corners, given that I'm doing corner+=3
+    // FIXME : see if the processing.js version of ArrayList supports .reserve or .resize or whatever for this...
+    for (int corner = numberOfCorners; corner < numberOfCorners*4; ++corner) {
+      corners.add(BOUNDARY);
+    }
 
     for (int corner = 0; corner < numberOfCorners; corner+=3) {
-
       final int previousCorner = temporaryCorners[p(corner)];
       final int nextCorner = temporaryCorners[n(corner)];
 
       int cornerIndex = 3*numberOfTriangles+corner;
       corners.set(cornerIndex, v(corner));
-      corners.set(n(cornerIndex), temporaryCorners[previousCorner]);
-      corners.set(p(cornerIndex), temporaryCorners[nextCorner]);
+      corners.set(n(cornerIndex), previousCorner);
+      corners.set(p(cornerIndex), nextCorner);
       
       cornerIndex = 6*numberOfTriangles+corner;
-      corners.set(cornerIndex, v(corner));
-      corners.set(n(cornerIndex), temporaryCorners[previousCorner]);
-      corners.set(p(cornerIndex), temporaryCorners[nextCorner]);
+      corners.set(cornerIndex, v(n(corner)));
+      corners.set(n(cornerIndex), temporaryCorners[corner]);
+      corners.set(p(cornerIndex), previousCorner);
 
       cornerIndex = 9*numberOfTriangles+corner;
-      corners.set(cornerIndex, v(corner));
-      corners.set(n(cornerIndex), temporaryCorners[previousCorner]);
-      corners.set(p(cornerIndex), temporaryCorners[nextCorner]);
-
+      corners.set(cornerIndex, v(p(corner)));
+      corners.set(n(cornerIndex), nextCorner);
+      corners.set(p(cornerIndex), temporaryCorners[corner]);
+      
+      corners.set(corner, temporaryCorners[corner]);
+      corners.set(n(corner), nextCorner);
+      corners.set(p(corner), previousCorner);
     }
     numberOfTriangles = 4*numberOfTriangles;
     numberOfCorners = 3*numberOfTriangles;
