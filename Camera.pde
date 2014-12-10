@@ -5,10 +5,8 @@ public class Camera {
   private PVector upVector = new PVector(0,1,0);
   private PVector viewDir = new PVector(0,0,-1);
   private PVector position;
-  private PVector viewPoint; // viewAt
-  private float strafeFactor;
-  public float rotatedX = 0;
-  public float rotatedY = 0;
+  private PVector viewPoint;
+  private final float strafeFactor;
 
   public Camera(float x, float y, float z, float strafeFactor) {
     this.position = new PVector(x, y, z);
