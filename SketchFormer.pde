@@ -20,6 +20,12 @@ public OTableHelper getOTableHelper() {
 }
 
 void setup() {
+  /*
+   The reason for hardcoding canvas size is because of the Processing.js bug where
+   in dev-mode screen.width and screen.height cannot be resolved.
+   In release (production) the hard-coded values can be replaced to screen.width and
+   screen.height without any trouble. So this is dev-purpose only.
+  */
   size(1500, 600, OPENGL); 
   noFill();
   mesh.loadMesh();
