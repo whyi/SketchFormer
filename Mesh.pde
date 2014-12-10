@@ -277,17 +277,10 @@ public class Mesh {
 
   public void refine() {
     loaded = false;
-    console.log("splitting " + numberOfTriangles);
     temporaryCorners = new Integer[numberOfTriangles*12];
-    // FIXME : initializing with the size doesn't work.
     splitEdges();
-    console.log("done!");
-    console.log("bulging");
     bulge();
-    console.log("done!");
-    console.log("spliting triangles");
     splitTriangles();
-    console.log("done!");
     buildOTable();
     computeNormals();
     loaded = true;
